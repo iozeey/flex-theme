@@ -1,0 +1,122 @@
+{% comment %}
+** Rich text - dynamic **
+- Draggable section
+{% endcomment %}
+
+{% comment %} Assign object as block or section {% endcomment %}
+{% if type == 'block' %}
+  {%- assign object = block -%}
+{% else %}
+  {%- assign object = section -%}
+{% endif %}
+
+{% comment %} Content settings {% endcomment %}
+{%- assign title = object.settings.title -%}
+{%- assign heading_font = object.settings.heading_font -%}
+{%- assign heading_color = object.settings.heading_color -%}
+{%- assign heading_alignment = object.settings.heading_alignment -%}
+{%- assign heading_size = object.settings.heading_size -%}
+{%- assign text = object.settings.text -%}
+{%- assign text_font = object.settings.text_font -%}
+{%- assign text_color = object.settings.text_color -%}
+{%- assign text_alignment = object.settings.text_alignment -%}
+{%- assign text_size = object.settings.text_size -%}
+{% comment %} End content settings {% endcomment %}
+
+{% comment %} Is the color set to transparent? {% endcomment %}
+{%- assign heading_alpha = heading_color | color_extract: 'alpha' -%}
+{%- assign text_alpha = text_color | color_extract: 'alpha' -%}
+{%- assign background_alpha = object.settings.background | color_extract: 'alpha' -%}
+{%- assign gradient_alpha = object.settings.gradient | color_extract: 'alpha' -%}
+
+{% comment %} Section specific CSS {% endcomment %}
+{% capture section_css -%}
+
+  .section {
+    background-image: linear-gradient({{ object.settings.gradient_rotation }}deg, rgba(255,255,255,0), {{ object.settings.gradient }});
+    background-color: {%- if background_alpha != 0 -%}{{ object.settings.background }}{%- endif -%};
+  }
+
+  .rich-text__heading {
+    font-size: {{ heading_size }}px;
+    color: {%- if heading_alpha != 0 -%}{{ heading_color }}{%- else -%}{{ settings.heading_color }}{%- endif -%};
+    font-family: {{ heading_font.family }}, {{ heading_font.fallback_families }};
+    font-weight: {{ heading_font.weight }};
+    font-style: {{ heading_font.style }};
+  }
+
+  .rich-text__text {
+    font-size: {{ text_size }}px;
+    color: {%- if text_alpha != 0 -%}{{ text_color }}{%- else -%}{{ settings.regular_color }}{%- endif -%};
+    font-family: {{ text_font.family }}, {{ text_font.fallback_families }};
+    font-weight: {{ text_font.weight }};
+    font-style: {{ text_font.style }};
+  }
+{%- endcapture -%}
+
+{% style %}
+  {{ heading_font | font_face }}
+  {{ text_font | font_face }}
+
+  #shopify-section-{{ object.id }} {
+    padding-top: {{ object.settings.padding_top }}px;
+    padding-bottom: {{ object.settings.padding_bottom }}px;
+    padding-left: {{ object.settings.padding_left }}px;
+    padding-right: {{ object.settings.padding_right }}px;
+    {% if object.settings.width == 'wide' %}
+      width: 100%;
+    {% elsif object.settings.width == 'half' %}
+      width: 50%;
+    {% endif %}
+  }
+  {% render 'css-loop',
+          css: section_css,
+          id: object.id
+  %}
+  {% render 'css-loop',
+          css: object.settings.custom_css,
+          id: object.id
+  %}
+{% endstyle %}
+
+{% comment %} HTML markup {% endcomment %}
+<section class="section
+                {{ object.settings.css_class }}
+                is-width-{{ object.settings.width }}
+                {% if background_alpha != 0 or gradient_alpha != 0  %}
+                  has-background
+                {% endif %}
+                "
+          {% if object.settings.animation != "none" %}
+            data-scroll-class="{{ object.settings.animation }}"
+          {% endif %}>
+  <div class="container
+              has-limit
+              ">
+    <div class="columns one-whole">
+      <div class="rich-text__content card-content">
+
+        {% if title != blank %}
+          <h2 class="rich-text__heading title text-align-{{ heading_alignment }} {% if heading_size > 50 %}mobile-shrink-text{% endif %}"><span>{{ title }}</span></h2>
+        {% endif %}
+
+        {% if text != blank %}
+          <div class="rich-text__text has-columns--{{ object.settings.columns }} text-align-{{ text_alignment }} content {% if text_size > 35 %}mobile-shrink-text{% endif %}">
+            {{ text }}
+          </div>
+        {% endif %}
+
+        {% if object.settings.button_label != blank %}
+          <div class="buttons is-{{ object.settings.button_alignment }}">
+            {% render 'button',
+                    label: object.settings.button_label,
+                    href: object.settings.button_link,
+                    style: object.settings.button_style,
+                    type: "link"
+            %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>

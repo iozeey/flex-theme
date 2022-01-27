@@ -1,0 +1,77 @@
+{% comment %}
+** Divider - dynamic **
+- Draggable section
+{% endcomment %}
+
+{% comment %} Assign object as block or section {% endcomment %}
+{% if type == 'block' %}
+  {%- assign object = block -%}
+{% else %}
+  {%- assign object = section -%}
+{% endif %}
+
+{% comment %} Content settings {% endcomment %}
+{%- assign divider_style = object.settings.divider_style -%}
+{%- assign divider_width = object.settings.divider_width -%}
+{%- assign divider_color = object.settings.divider_color -%}
+{% comment %} End content settings {% endcomment %}
+
+{% comment %} Is the color set to transparent? {% endcomment %}
+{%- assign divider_alpha = divider_color | color_extract: 'alpha' -%}
+
+{% comment %} Section specific CSS {% endcomment %}
+{% capture section_css -%}
+
+  .heading-divider:not(.heading-divider--vertical) {
+    border-color: {%- if divider_alpha != 0 -%}{{ divider_color }}{%- endif -%};
+    border-width: {%- if divider_width == 1 -%}thin{%- else -%}{{ divider_width }}px{%- endif -%};
+  }
+
+  .heading-divider--vertical {
+    background: {%- if divider_alpha != 0 -%}{{ divider_color }}{%- endif -%};
+    width: {{ divider_width }}px;
+  }
+
+{%- endcapture -%}
+
+{% style %}
+  #shopify-section-{{ object.id }} {
+    padding-top: {{ object.settings.padding_top }}px;
+    padding-bottom: {{ object.settings.padding_bottom }}px;
+    {% if object.settings.width == 'wide' %}
+      width: 100%;
+    {% endif %}
+  }
+  {% render 'css-loop',
+          css: section_css,
+          id: object.id
+  %}
+  {% render 'css-loop',
+          css: object.settings.custom_css,
+          id: object.id
+  %}
+{% endstyle %}
+
+{% comment %} HTML markup {% endcomment %}
+<section class="section
+                {{ object.settings.css_class }}
+                is-width-{{ object.settings.width }}
+                "
+                {% if object.settings.animation != "none" %}
+                  data-scroll-class="{{ object.settings.animation }}"
+                {% endif %}>
+  <div class="container">
+    <div class="one-whole column">
+      <div class="divider-section__content
+                  is-flex
+                  is-flex-column
+                  is-align-{{ object.settings.alignment }}">
+        {% if settings.display_heading_divider == true %}
+          <div class="heading-divider
+                      heading-divider--{{ divider_style }}">
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>

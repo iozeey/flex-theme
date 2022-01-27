@@ -1,0 +1,193 @@
+{% comment %}
+** Blog posts - dynamic **
+- Draggable section
+{% endcomment %}
+
+{% comment %} Assign object as block or section {% endcomment %}
+{% if type == 'block' %}
+  {%- assign object = block -%}
+{% else %}
+  {%- assign object = section -%}
+{% endif %}
+
+{% comment %} Content settings {% endcomment %}
+{%- assign title = object.settings.title -%}
+{%- assign blog = blogs[object.settings.blog_widget_select] -%}
+{% comment %} End content settings {% endcomment %}
+
+{% comment %} Section specific CSS {% endcomment %}
+{% style %}
+  #shopify-section-{{ object.id }} {
+    padding-top: {{ object.settings.padding_top }}px;
+    padding-bottom: {{ object.settings.padding_bottom }}px;
+    {% if object.settings.width == 'wide' -%}
+      width: 100%;
+    {%- endif %}
+  }
+  {% render 'css-loop',
+          css: object.settings.custom_css,
+          id: object.id
+  %}
+{% endstyle %}
+
+{% comment %} HTML markup {% endcomment %}
+<section class="section
+                {{ object.settings.css_class }}
+                is-width-{{ object.settings.width }}"
+                {% if object.settings.animation != "none" %}
+                  data-scroll-class="{{ object.settings.animation }}"
+                {% endif %}>
+
+  {% if title != blank %}
+    <div class="container">
+      {% render 'heading',
+              title: title,
+              heading_tag: 'h2',
+              context: 'featured-blog',
+              text_alignment: 'center',
+              url: blog.url
+      %}
+    </div>
+  {% endif %}
+
+  <div class="container">
+    {% if blog != blank %}
+      {% for article in blog.articles limit: object.settings.home_page_articles %}
+          <div class="featured-article blog-card {% render 'column-width', value: object.settings.home_page_articles %} columns article card show-border-{{ object.settings.show-border }} medium-down--one-whole has-margin-bottom ">
+
+            {% if article.image != blank %}
+              <div class="card-image blog-card__image">
+                <figure class="image">
+                  <a class="blog-card__link" href="{{ article.url }}" title="{{ article.title | escape }}">
+                    {% render 'image-element',
+                            image: article.image,
+                            alt: article.image.alt,
+                            additional_classes: 'blog-card__image'
+                    %}
+                  </a>
+                </figure>
+              </div>
+            {% endif %}
+
+            <div class="card-content blog-card__content">
+              <div class="media">
+                <div class="media-content">
+                  <h3 class="title">
+                    <a class="featured-article--link" href="{{ article.url }}" title="{{ article.title | escape }}">{{ article.title }}</a>
+                  </h3>
+                </div>
+              </div>
+
+              {% if article.excerpt != blank and object.settings.blog_show_excerpt%}
+                {%- assign postexcerpt = article.excerpt | size -%}
+                {% if postexcerpt > 150 %}
+                  {%- assign excerptlength = 'lg' -%}
+                {% elsif postexcerpt <= 150 %}
+                  {%- assign excerptlength = 'sm' -%}
+                {% endif %}
+                <div class="excerpt excerpt-length-{{ excerptlength }} has-margin-bottom">
+                  {{ article.excerpt }}
+                  <span class="truncation-fade"></span>
+                </div>
+              {% endif %}
+
+              <div class="meta-info is-small">
+                {% if object.settings.blog_show_tags %}
+                  {% if article.tags.size > 0 %}
+                    <ul class="meta-tag-list tags">
+                    {% for tag in article.tags %}
+                      <li class="tag tag--{{ settings.tag_style}}">
+                        <a href="{{ shop.url}}/blogs/{{ blog.handle }}/tagged/{{ tag | handleize }}" title="{{ blog.title | escape }} {{ 'blogs.general.tagged' | t }} {{ tag | escape }}">{{ tag }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                    </ul>
+                  {% endif %}
+                {% endif %}
+
+                {% render 'meta-info-list',
+                        article: article,
+                        blog_author: object.settings.blog_author,
+                        blog_date: object.settings.blog_date,
+                        blog_read_time: object.settings.read_time,
+                        blog_comment_count: object.settings.blog_comment_count
+                %}
+              </div>
+            </div>
+          {% if object.settings.button_type != 'none' %}
+            <div class="blog-card__read-more">
+              {% render 'button',
+                      label: object.settings.button_label,
+                      href: article.url,
+                      type: "link",
+                      style: object.settings.button_type
+              %}
+            </div>
+          {% endif %}
+          </div>
+      {% endfor %}
+    {% else %}
+      {% for i in (1..object.settings.home_page_articles) %}
+        <div class="featured-article blog-card {% render 'column-width', value: object.settings.home_page_articles %} columns article card show-border-{{ object.settings.show-border }} medium-down--one-half small-down--one-whole has-margin-bottom">
+          <div class="card-image blog-card__image">
+            <figure class="image">
+              <a href="{{ article.url }}">
+                {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+              </a>
+            </figure>
+          </div>
+
+          <div class="card-content blog-card__content">
+            <div class="media">
+              <div class="media-content">
+                <h4 class="title">
+                  <a class="featured-article--link" href="#">{{ 'homepage.onboarding.blogpost_title' | t }}</a>
+                </h4>
+              </div>
+            </div>
+
+            {% if object.settings.blog_show_excerpt%}
+              <div class="excerpt has-margin-bottom">
+                {{ 'homepage.onboarding.blog_excerpt' | t }}
+                <span class="truncation-fade"></span>
+              </div>
+            {% endif %}
+
+            <div class="meta-info is-small">
+                {% if object.settings.blog_show_tags %}
+                <ul class="meta-tag-list tags ">
+                  {% for i in (1..3) %}
+                    <li class="tag tag--{{ settings.tag_style}}">
+                      <a href="#">
+                        tag{{i}}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+
+                {% render 'meta-info-list',
+                        article: article,
+                        blog_author: object.settings.blog_author,
+                        blog_date: object.settings.blog_date,
+                        blog_read_time: object.settings.read_time,
+                        blog_comment_count: object.settings.blog_comment_count
+                %}
+              </div>
+            </div>
+
+          {% if object.settings.button_type != 'none' %}
+            <div class="blog-card__read-more">
+              {% render 'button',
+                      label: object.settings.button_label,
+                      href: a.url,
+                      type: "link",
+                      style: object.settings.button_type
+              %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</section>

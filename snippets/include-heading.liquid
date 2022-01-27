@@ -1,0 +1,113 @@
+{% comment %}
+** Heading - dynamic **
+- Draggable section
+{% endcomment %}
+
+{% comment %} Content settings {% endcomment %}
+{%- assign preheading = section.settings.preheading -%}
+{%- assign title = section.settings.title -%}
+{%- assign subheading = section.settings.subheading -%}
+{% comment %} End content settings {% endcomment %}
+
+{% comment %} Is the color set to transparent? {% endcomment %}
+{%- assign heading_alpha = section.settings.heading_color | color_extract: 'alpha' -%}
+{%- assign preheading_alpha = section.settings.preheading_color | color_extract: 'alpha' -%}
+{%- assign subheading_alpha = section.settings.subheading_color | color_extract: 'alpha' -%}
+{%- assign background_alpha = section.settings.background | color_extract: 'alpha' -%}
+{%- assign gradient_alpha = section.settings.gradient | color_extract: 'alpha' -%}
+
+{% comment %} Section specific CSS {% endcomment %}
+{% capture section_css -%}
+
+  .section {
+    background-image: linear-gradient({{ section.settings.gradient_rotation }}deg, rgba(255,255,255,0), {{ section.settings.gradient }});
+    background-color: {%- if background_alpha != 0 -%}{{ section.settings.background }}{%- endif -%};
+  }
+
+  .heading-section__heading {
+    color: {%- if heading_alpha != 0 -%}{{ section.settings.heading_color }}{%- else -%}{{ settings.heading_color }}{%- endif -%};
+  }
+
+  .heading-section__preheading {
+    color: {%- if preheading_alpha != 0 -%}{{ section.settings.preheading_color }}{%- else -%}{{ settings.heading_color }}{%- endif -%};
+  }
+
+  .heading-section__subheading {
+    color: {%- if subheading_alpha != 0 -%}{{ section.settings.subheading_color }}{%- else -%}{{ settings.heading_color }}{%- endif -%};
+  }
+
+{%- endcapture -%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    padding-left: {{ section.settings.padding_left }}px;
+    padding-right: {{ section.settings.padding_right }}px;
+    {% if section.settings.width == 'wide' -%}
+      width: 100%;
+    {%- elsif section.settings.width == 'half' -%}
+      width: 50%;
+    {%- endif %}
+  }
+
+  {% render 'css-loop',
+          css: section_css,
+          id: section.id
+  %}
+  {% render 'css-loop',
+          css: section.settings.custom_css,
+          id: section.id
+  %}
+{% endstyle %}
+
+{% comment %} HTML markup {% endcomment %}
+{% if title != blank or subheading != blank or preheading != blank %}
+  <section class="section
+                  {{ section.settings.css_class }}
+                  is-width-{{ section.settings.width }}
+                  {% if background_alpha != 0 or gradient_alpha != 0  %}
+                    has-background
+                  {% endif %}
+                  "
+            data-section-id="{{ section.id }}"
+            {% if section.settings.animation != "none" %}
+              data-scroll-class="{{ section.settings.animation }}"
+            {% endif %}>
+    <div class="container
+                ">
+      <div class="one-whole column">
+        <div class="heading-section__content
+                    is-flex
+                    is-flex-column
+                    is-align-{{ section.settings.heading_alignment }}
+                    text-align-{{ section.settings.heading_alignment }}
+                    vertical-spacing-{{ section.settings.vertical_spacing }}">
+          {% if preheading != blank %}
+            <div class="heading-section__preheading subtitle">
+              {{ preheading }}
+            </div>
+          {% endif %}
+
+          {% if title != blank %}
+            <h2 class="heading-section__heading title">{{ title }}</h2>
+          {% endif %}
+
+          {% if subheading != blank %}
+            <div class="heading-section__subheading subtitle">
+              {{ subheading }}
+            </div>
+          {% endif %}
+
+          {% if settings.display_heading_divider == true %}
+            <div class="heading-divider
+                      heading-divider--{{ settings.heading_divider_style }}"
+                  {% if settings.heading_divider_animation != "none" %}
+                    data-scroll-class="{{ settings.heading_divider_animation }}"
+                  {% endif %}>
+            </div>
+          {% endif %}
+      </div>
+    </div>
+  </section>
+{% endif %}

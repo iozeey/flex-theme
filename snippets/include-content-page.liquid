@@ -1,0 +1,78 @@
+{% comment %}
+** Content page - dynamic **
+- Draggable section
+{% endcomment %}
+
+{% comment %} Assign object as block or section {% endcomment %}
+{% if type == 'block' %}
+  {%- assign object = block -%}
+{% else %}
+  {%- assign object = section -%}
+{% endif %}
+
+{% comment %} Content settings {% endcomment %}
+{%- assign content_page = pages[object.settings.content_page] -%}
+{% comment %} End content settings {% endcomment %}
+
+{% comment %} Is the color set to transparent? {% endcomment %}
+{%- assign background_alpha = object.settings.background | color_extract: 'alpha' -%}
+{%- assign gradient_alpha = object.settings.gradient | color_extract: 'alpha' -%}
+
+{% comment %} Section specific CSS {% endcomment %}
+{% capture section_css -%}
+  .section {
+    background-image: linear-gradient({{ object.settings.gradient_rotation }}deg, rgba(255,255,255,0), {{ object.settings.gradient }});
+    background-color: {%- if background_alpha != 0 -%}{{ object.settings.background }}{%- endif -%};
+  }
+{%- endcapture -%}
+
+{% style %}
+  #shopify-section-{{ object.id }} {
+    padding-top: {{ object.settings.padding_top }}px;
+    padding-bottom: {{ object.settings.padding_bottom }}px;
+    padding-left: {{ object.settings.padding_left }}px;
+    padding-right: {{ object.settings.padding_right }}px;
+    {% if object.settings.width == 'wide' -%}
+      width: 100%;
+    {%- elsif object.settings.width == 'half' -%}
+      width: 50%;
+    {%- endif %}
+  }
+  {% render 'css-loop',
+          css: section_css,
+          id: object.id
+  %}
+  {% render 'css-loop',
+          css: object.settings.custom_css,
+          id: object.id
+  %}
+{% endstyle %}
+
+{% comment %} HTML markup {% endcomment %}
+  <section class="section
+                {{ object.settings.css_class }}
+                is-width-{{ object.settings.width }}
+                {% if background_alpha != 0 or gradient_alpha != 0  %}
+                  has-background
+                {% endif %}
+                has-padding-top
+                has-padding-bottom
+                "
+          {% if object.settings.animation != "none" %}
+            data-scroll-class="{{ object.settings.animation }}"
+          {% endif %}>
+    <div class="container
+                has-limit
+                content
+                ">
+      {% if content_page != blank %}
+        {% render 'page-multi-column', content: content_page.content %}
+      {% else %}
+        <div class="one-whole column">
+          <p class="text-align-center">
+            {{ 'homepage.onboarding.no_content' | t }}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </section>

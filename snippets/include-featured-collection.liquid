@@ -1,0 +1,139 @@
+{% comment %}
+** Single featured collection - dynamic **
+- Draggable section
+{% endcomment %}
+
+{% comment %} Assign object as block or section {% endcomment %}
+{% if type == 'block' %}
+  {%- assign object = block -%}
+{% else %}
+  {%- assign object = section -%}
+{% endif %}
+
+{% comment %} Content settings {% endcomment %}
+{%- assign title = object.settings.title -%}
+{%- assign collection = collections[object.settings.collection] -%}
+{% comment %} End content settings {% endcomment %}
+
+{% comment %} Assign product length to be selected limit for onboarding {% endcomment %}
+{% if collection != blank and collection.products != blank %}
+  {%- assign section_onboarding = false -%}
+{% else %}
+  {%- assign section_onboarding = true -%}
+{% endif %}
+
+{% comment %} Check to see if enough products available to create slide {% endcomment %}
+{% if object.settings.collection_style == 'slider' %}
+  {% if object.settings.products_limit > object.settings.products_per and collection.all_products_count > object.settings.products_per %}
+    {%- assign layout = 'slider' -%}
+  {% else %}
+    {%- assign layout = 'grid' -%}
+  {% endif %}
+{% else %}
+  {%- assign layout = 'grid' -%}
+{% endif %}
+
+{% comment %} Section specific CSS {% endcomment %}
+{% style %}
+  #shopify-section-{{ object.id }} {
+    padding-top: {{ object.settings.padding_top }}px;
+    padding-bottom: {{ object.settings.padding_bottom }}px;
+    {% if object.settings.width == 'wide' %}
+      width: 100%;
+    {% endif %}
+  }
+  {% render 'css-loop',
+          css: object.settings.custom_css,
+          id: object.id
+  %}
+{% endstyle %}
+
+{% comment %} HTML markup {% endcomment %}
+<section class="section
+                {{ object.settings.css_class }}
+                is-width-{{ object.settings.width }}
+                {% if show_gutter == false %}
+                  has-no-side-gutter
+                  has-background
+                {% else %}
+                  has-gutter-enabled
+                {% endif %}
+                "
+                {% if object.settings.animation != "none" %}
+                  data-scroll-class="{{ object.settings.animation }}"
+                {% endif %}>
+  {% if title != blank %}
+    <div class="container">
+      {% render 'heading',
+              title: title,
+              heading_tag: 'h2',
+              context: 'featured-collection',
+              text_alignment: 'center',
+              url: collection.url
+      %}
+    </div>
+  {% endif %}
+  <div class="container has-column-padding-bottom featured-collection layout--{{ layout }} is-justify-center">
+    {% if section_onboarding == false %}
+      {% comment %} Loop through products {% endcomment %}
+      {% if layout == 'slider' %}
+        {% if collection.all_products_count > 0 %}
+          {% render 'product-slider',
+                  limit: object.settings.products_limit,
+                  products: collection.products,
+                  skip_product: product,
+                  per_slide: object.settings.products_per,
+                  mobile_products_per_row: object.settings.mobile_products_per_row,
+                  align_height: object.settings.align_height,
+                  height: object.settings.height,
+                  show_gutter: object.settings.show_gutter,
+                  featured_collection: object.settings.collection
+          %}
+        {% endif %}
+      {% else %}
+        {% if collection.all_products_count > 0 %}
+          {% render 'product-loop',
+                  limit: object.settings.products_limit,
+                  products: collection.products,
+                  skip_product: product,
+                  products_per_row: object.settings.products_per,
+                  mobile_products_per_row: object.settings.mobile_products_per_row,
+                  align_height: object.settings.align_height,
+                  height: object.settings.collection_height
+          %}
+        {% endif %}
+      {% endif %}
+    {% else %}
+      {% comment %} Placeholder images {% endcomment %}
+      {% for i in (1..10) %}
+        <div class="collection__item
+          	one-fifth
+            {% if object.settings.mobile_products_per_row == '1' %}
+              small-down--one-whole
+            {% else %}
+              small-down--one-half
+            {% endif %}
+            thumbnail column">
+          {% capture num %}{% cycle "1", "2", "3", "4", "5", "6" %}{% endcapture %}
+          {{ 'product-' | append: num | placeholder_svg_tag: 'placeholder-svg placeholder-svg--product' }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</section>
+
+{% comment %} JavaScript {% endcomment %}
+<script
+  type="application/json"
+  data-section-id="{{ object.id }}"
+  data-section-data
+>
+  {
+    "collection_style": {{ layout | json }},
+    "products_per": {{ object.settings.products_per | json}},
+    "products_available": {{ collection.all_products_count | json }},
+    "products_limit": {{ object.settings.products_limit | json }},
+    "align_height": {{ object.settings.align_height | json }}
+  }
+</script>
+<script data-theme-editor-load-script src="{{ 'z__jsFeaturedCollection.js' | asset_url }}"></script>
